@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neotokyo Swoop</title>
+    <style>
+        @font-face {
+            font-family: 'Orbitron';
+            src: url('assets/fonts/Orbitron.ttf');
+            font-display: swap;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #050a12;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid #00e5ff;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), 0 0 45px rgba(255, 46, 136, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="js/NeotokyoSprites.js"></script>
+    <script src="js/ThreeSceneRenderer.js"></script>
+    <script src="js/scenes/PreloadScene.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/RaceScene.js"></script>
+    <script src="js/scenes/ResultScene.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Send game logs to server for debugging
+        setInterval(() => {
+            if (window._gameLog && window._gameLog.length > 0) {
+                fetch('/log', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'text/plain'},
+                    body: window._gameLog.join('\n')
+                }).catch(() => {});
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
