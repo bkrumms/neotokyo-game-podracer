@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NeoTokyo Swoop</title>
     <style>
         @font-face {
@@ -11,20 +11,31 @@
             font-display: swap;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
+        html, body {
             background: #050a12;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            overscroll-behavior: none;
+        }
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            min-height: 100dvh;
             overflow: hidden;
         }
         #game-container {
             position: relative;
-            width: 800px;
-            height: 600px;
+            width: min(100vw, 800px);
+            height: min(100dvh, calc(min(100vw, 800px) * 0.75));
+            max-width: 800px;
+            max-height: 600px;
             border: 2px solid #00e5ff;
             box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), 0 0 45px rgba(255, 46, 136, 0.15);
+            touch-action: none;
         }
     </style>
 </head>

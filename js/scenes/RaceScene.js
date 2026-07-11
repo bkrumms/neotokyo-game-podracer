@@ -42,11 +42,31 @@ class RaceScene extends Phaser.Scene {
         // ---- HUD (Phaser overlay) ----
         this.createHUD();
 
-        // ---- Input ----
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys({
-            A: Phaser.Input.Keyboard.KeyCodes.A,
-            D: Phaser.Input.Keyboard.KeyCodes.D
+        // ---- Input (keyboard + touch/click side taps) ----
+        this.pendingTouchLeft = false;
+        this.pendingTouchRight = false;
+
+        // Keyboard may be null on pure-touch devices
+        if (this.input.keyboard) {
+            this.cursors = this.input.keyboard.createCursorKeys();
+            this.keys = this.input.keyboard.addKeys({
+                A: Phaser.Input.Keyboard.KeyCodes.A,
+                D: Phaser.Input.Keyboard.KeyCodes.D
+            });
+        } else {
+            this.cursors = null;
+            this.keys = null;
+        }
+
+        // Tap/click left half → shift left, right half → shift right
+        this.input.on('pointerdown', (pointer) => {
+            if (!this.isRacing) return;
+            // Game coordinates (0..width) — works with Scale.FIT
+            if (pointer.x < this.scale.width * 0.5) {
+                this.pendingTouchLeft = true;
+            } else {
+                this.pendingTouchRight = true;
+            }
         });
 
         // ---- Show 3D scene ----
@@ -288,7 +308,7 @@ class RaceScene extends Phaser.Scene {
         this.boostCountText.setShadow(0, 0, '#00ffcc', 6, true, true);
 
         // Lane hint
-        this.add.text(400, 582, '← → / A D  SHIFT LANES', {
+        this.add.text(400, 582, '← → / A D / TAP SIDES  SHIFT LANES', {
             fontFamily: 'monospace', fontSize: '11px', color: '#3a5a6a'
         }).setOrigin(0.5).setDepth(50);
 
@@ -346,14 +366,24 @@ class RaceScene extends Phaser.Scene {
     // ---- Input ----
 
     handleInput(dt) {
+        // Consume touch/click taps even when cooldown blocks a shift,
+        // so held/spam taps don't queue a shift after the cooldown ends.
+        const touchLeft = this.pendingTouchLeft;
+        const touchRight = this.pendingTouchRight;
+        this.pendingTouchLeft = false;
+        this.pendingTouchRight = false;
+
         if (!this.canShift) return;
 
-        const left =
-            Phaser.Input.Keyboard.JustDown(this.cursors.left) ||
-            Phaser.Input.Keyboard.JustDown(this.keys.A);
-        const right =
-            Phaser.Input.Keyboard.JustDown(this.cursors.right) ||
-            Phaser.Input.Keyboard.JustDown(this.keys.D);
+        const keyLeft =
+            (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.left)) ||
+            (this.keys && Phaser.Input.Keyboard.JustDown(this.keys.A));
+        const keyRight =
+            (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.right)) ||
+            (this.keys && Phaser.Input.Keyboard.JustDown(this.keys.D));
+
+        const left = keyLeft || touchLeft;
+        const right = keyRight || touchRight;
 
         if (left && this.currentLane > 0) {
             this.currentLane--;

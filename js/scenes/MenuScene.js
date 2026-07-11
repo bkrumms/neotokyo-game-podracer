@@ -141,7 +141,7 @@ class MenuScene extends Phaser.Scene {
         const hintStrip = this.add.rectangle(cx, 555, 800, 50, 0x050a12, 0.8);
         hintStrip.setStrokeStyle(1, 0x0f2530, 0.8);
 
-        this.add.text(cx, 542, '← →  or  A D   to shift lanes  ·  hold the line', {
+        this.add.text(cx, 542, '← → / A D / tap sides   to shift lanes  ·  hold the line', {
             fontFamily: 'monospace',
             fontSize: '13px',
             color: '#8fb5c4'

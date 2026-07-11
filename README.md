@@ -28,6 +28,7 @@ You can also serve the folder with any static file server (or open via a simple 
 | Input | Action |
 |---|---|
 | ← → or A D | Shift lanes |
+| Tap left / right half of screen | Shift lanes (mobile / touch) |
 | — | Bike auto-throttles forward |
 
 ## Stack
