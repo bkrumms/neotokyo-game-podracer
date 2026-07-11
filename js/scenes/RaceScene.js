@@ -79,112 +79,136 @@ class RaceScene extends Phaser.Scene {
     }
 
     // ---- Track generation (hand-tuned street patterns) ----
+    // Occupancy is lane-exclusive within a distance window so obstacles
+    // never spawn on top of boost pads (and shifters don't share a wave with pads).
 
     generateTrack() {
         const events = [];
-        const spacing = 280;
+        const spacing = 300;
         const totalSlots = Math.floor(this.TRACK_LENGTH / spacing);
+        // round distance to bucket size for conflict checks
+        const BUCKET = 50;
+        // lane occupancy: Map<"bucket_lane", type>
+        const occ = new Map();
+
+        const key = (dist, lane) => `${Math.round(dist / BUCKET)}_${lane}`;
+
+        const canPlace = (dist, lane) => !occ.has(key(dist, lane));
+
+        const claim = (dist, lane, type) => {
+            occ.set(key(dist, lane), type);
+            // Soft buffer: claim nearby buckets in same lane so pads/obstacles
+            // don't stack almost on top of each other along Z.
+            occ.set(key(dist + BUCKET * 0.5, lane), type);
+            occ.set(key(dist - BUCKET * 0.5, lane), type);
+        };
+
+        const pushBoost = (dist, lane) => {
+            if (lane < 0 || lane > 2 || !canPlace(dist, lane)) return false;
+            events.push({ distance: dist, lane, type: 'boost', spriteKey: 'boost_pad' });
+            claim(dist, lane, 'boost');
+            return true;
+        };
+
+        const pushStatic = (dist, lane, progress) => {
+            if (lane < 0 || lane > 2 || !canPlace(dist, lane)) return false;
+            events.push({
+                distance: dist,
+                lane,
+                type: 'obstacle_static',
+                spriteKey: this._pickObstacle(progress)
+            });
+            claim(dist, lane, 'obstacle');
+            return true;
+        };
+
+        // Shifting hazards sweep between start/target lanes — reserve both lanes
+        // at that distance so nothing shares the wave (no pad under a drone path).
+        const pushShift = (dist, lane, progress) => {
+            const targetLane = (lane + Phaser.Math.Between(1, 2)) % 3;
+            if (!canPlace(dist, lane) || !canPlace(dist, targetLane)) return false;
+
+            // Slow, readable lane sweeps (was ~1.2–2.6 Hz — way too fast)
+            // Range: ~0.28–0.55 full cycles/sec, slight ramp late-track
+            const shiftSpeed = 0.28 + Math.random() * 0.22 + progress * 0.08;
+
+            events.push({
+                distance: dist,
+                lane,
+                type: 'obstacle_shift',
+                spriteKey: Phaser.Math.Between(0, 1) === 0 ? 'drone' : 'security_gate',
+                targetLane,
+                shiftSpeed
+            });
+            claim(dist, lane, 'shift');
+            claim(dist, targetLane, 'shift');
+            return true;
+        };
 
         // Opening stretch — pure boosts so the player learns the loop
         for (let i = 2; i < 5; i++) {
-            events.push({
-                distance: i * spacing,
-                lane: i % 3,
-                type: 'boost',
-                spriteKey: 'boost_pad'
-            });
+            pushBoost(i * spacing, i % 3);
         }
 
         for (let i = 5; i < totalSlots - 2; i++) {
             const dist = i * spacing;
-            // Difficulty ramps: denser obstacles mid/late track
             const progress = i / totalSlots;
             const lane = Phaser.Math.Between(0, 2);
             const rand = Math.random();
 
-            // Periodic triple-lane choice: boost + two hazards
+            // Periodic triple-lane choice: one clear boost lane, two hazards
             if (i % 11 === 0) {
                 const boostLane = Phaser.Math.Between(0, 2);
-                events.push({ distance: dist, lane: boostLane, type: 'boost', spriteKey: 'boost_pad' });
+                pushBoost(dist, boostLane);
                 for (let l = 0; l < 3; l++) {
                     if (l === boostLane) continue;
-                    events.push({
-                        distance: dist,
-                        lane: l,
-                        type: 'obstacle_static',
-                        spriteKey: this._pickObstacle(progress)
-                    });
+                    pushStatic(dist, l, progress);
                 }
                 continue;
             }
 
-            // Shifting threat
-            if (rand < 0.12 + progress * 0.1) {
-                const targetLane = (lane + Phaser.Math.Between(1, 2)) % 3;
-                events.push({
-                    distance: dist,
-                    lane,
-                    type: 'obstacle_shift',
-                    spriteKey: Phaser.Math.Between(0, 1) === 0 ? 'drone' : 'security_gate',
-                    targetLane,
-                    shiftSpeed: 1.2 + Math.random() * 0.9 + progress * 0.5
-                });
-                // Companion boost in another lane
-                if (Math.random() < 0.55) {
-                    events.push({
-                        distance: dist + 40,
-                        lane: (lane + 1) % 3,
-                        type: 'boost',
-                        spriteKey: 'boost_pad'
-                    });
+            // Shifting threat — no boosts on the same distance wave
+            if (rand < 0.12 + progress * 0.08) {
+                if (pushShift(dist, lane, progress)) {
+                    // Reward boost well AFTER the hazard wave, free lane
+                    const freeLanes = [0, 1, 2].filter(
+                        (l) => canPlace(dist + spacing * 0.55, l)
+                    );
+                    if (freeLanes.length && Math.random() < 0.5) {
+                        pushBoost(
+                            dist + spacing * 0.55,
+                            freeLanes[Phaser.Math.Between(0, freeLanes.length - 1)]
+                        );
+                    }
                 }
                 continue;
             }
 
             // Boost alone
             if (rand < 0.42) {
-                events.push({ distance: dist, lane, type: 'boost', spriteKey: 'boost_pad' });
+                pushBoost(dist, lane);
                 continue;
             }
 
-            // Static obstacle
+            // Static obstacle + optional offset boost (different lane AND distance)
             if (rand < 0.72) {
-                events.push({
-                    distance: dist,
-                    lane,
-                    type: 'obstacle_static',
-                    spriteKey: this._pickObstacle(progress)
-                });
-                // Nearby boost as reward for dodging
-                if (Math.random() < 0.45) {
-                    events.push({
-                        distance: dist + spacing * 0.45,
-                        lane: (lane + Phaser.Math.Between(1, 2)) % 3,
-                        type: 'boost',
-                        spriteKey: 'boost_pad'
-                    });
+                if (pushStatic(dist, lane, progress) && Math.random() < 0.5) {
+                    const other = (lane + Phaser.Math.Between(1, 2)) % 3;
+                    pushBoost(dist + spacing * 0.5, other);
                 }
                 continue;
             }
 
-            // Boost + offset obstacle same "wave"
-            events.push({ distance: dist, lane, type: 'boost', spriteKey: 'boost_pad' });
-            events.push({
-                distance: dist,
-                lane: (lane + Phaser.Math.Between(1, 2)) % 3,
-                type: 'obstacle_static',
-                spriteKey: this._pickObstacle(progress)
-            });
+            // Boost + obstacle same distance, different lanes only
+            if (pushBoost(dist, lane)) {
+                const other = (lane + Phaser.Math.Between(1, 2)) % 3;
+                pushStatic(dist, other, progress);
+            }
         }
 
         // Finish approach: clear boosts into the line
         for (let i = 0; i < 3; i++) {
-            events.push({
-                distance: this.TRACK_LENGTH - 700 + i * 200,
-                lane: i % 3,
-                type: 'boost',
-                spriteKey: 'boost_pad'
-            });
+            pushBoost(this.TRACK_LENGTH - 700 + i * 200, i % 3);
         }
 
         events.sort((a, b) => a.distance - b.distance);

@@ -1,19 +1,19 @@
-# Neotokyo Swoop — Game Design Document
+# NeoTokyo Swoop — Game Design Document
 
 ## Overview
 
-**Title:** Neotokyo Swoop  
+**Title:** NeoTokyo Swoop  
 **Genre:** Time trial lane-racer (swoop bike)  
 **Platform:** Web browser (desktop)  
-**Target Audience:** Neotokyo web3 community  
+**Target Audience:** NeoTokyo web3 community  
 **Inspiration:** Knights of the Old Republic swoop racing minigame  
-**Setting:** Night street circuit *inside* Neotokyo (community aesthetic, not generic cyberpunk)
+**Setting:** Night street circuit *inside* NeoTokyo (community aesthetic, not generic cyberpunk)
 
 ---
 
 ## Concept
 
-You pilot a swoop bike down a neon street in Neotokyo. The bike drives itself forward. You only shift lanes. Hit boost pads to climb speed, dodge street hazards that shred your hull, and cross the finish as fast as you can.
+You pilot a swoop bike down a neon street in NeoTokyo. The bike drives itself forward. You only shift lanes. Hit boost pads to climb speed, dodge street hazards that shred your hull, and cross the finish as fast as you can.
 
 ---
 

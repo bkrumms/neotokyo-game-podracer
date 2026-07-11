@@ -1,6 +1,6 @@
-# Neotokyo Swoop
+# NeoTokyo Swoop
 
-KOTOR-style swoop bike racing through the neon streets of **Neotokyo**.
+KOTOR-style swoop bike racing through the neon streets of **NeoTokyo**.
 
 Hit boost pads. Dodge street hazards. Three hull hits and you crash. Fastest time wins.
 

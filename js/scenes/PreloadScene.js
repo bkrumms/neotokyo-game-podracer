@@ -43,7 +43,7 @@ class PreloadScene extends Phaser.Scene {
 
         this.add.rectangle(cx, cy, 800, 600, 0x050a12);
 
-        this.add.text(cx, cy - 70, 'NEOTOKYO', {
+        this.add.text(cx, cy - 70, 'NeoTokyo', {
             fontFamily: 'Orbitron, monospace',
             fontSize: '36px',
             color: '#00e5ff',

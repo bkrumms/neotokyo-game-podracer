@@ -361,50 +361,61 @@ class ThreeSceneRenderer {
     }
 
     _buildBillboards() {
-        // Mount real Neotokyo art at some building faces, oriented toward the road.
+        // Mount NeoTokyo community art + generated street ads on building faces.
         // Planes stream + recycle in lockstep with their building via a shared slotZ.
         const loader = new THREE.TextureLoader();
-        const load = (file) => {
-            const t = loader.load('assets/billboards/' + file);
-            return t;
-        };
+        const load = (file) => loader.load('assets/billboards/' + file);
 
         // key: file, native aspect (w/h) used to keep art undistorted
         const art = {
-            samurai:   { tex: load('billboard_samurai.png'),  agr: 434 / 512 },
-            bank:      { tex: load('billboard_bank.png'),      agr: 512 / 364 },
-            biker:     { tex: load('billboard_biker.png'),     agr: 512 / 372 },
-            pillscape: { tex: load('billboard_pillscape.png'), agr: 512 / 372 },
-            citizen1:  { tex: load('poster_citizen1.png'),     agr: 1 },
-            citizen2:  { tex: load('poster_citizen2.png'),     agr: 1 },
-            citizen3:  { tex: load('poster_citizen3.png'),     agr: 1 }
+            samurai:     { tex: load('billboard_samurai.png'),  agr: 434 / 512 },
+            bank:        { tex: load('billboard_bank.png'),      agr: 512 / 364 },
+            biker:       { tex: load('billboard_biker.png'),     agr: 512 / 372 },
+            pillscape:   { tex: load('billboard_pillscape.png'), agr: 512 / 372 },
+            wanted1:     { tex: load('poster_wanted1.jpg'),      agr: 2 / 3 },
+            wanted2:     { tex: load('poster_wanted2.jpg'),      agr: 2 / 3 },
+            featured1:   { tex: load('poster_featured1.jpg'),    agr: 2 / 3 },
+            featured2:   { tex: load('poster_featured2.jpg'),    agr: 2 / 3 },
+            neural:      { tex: load('ad_neural_link.jpg'),      agr: 16 / 9 },
+            ramen:       { tex: load('ad_synth_ramen.jpg'),      agr: 16 / 9 },
+            voidcredit:  { tex: load('ad_void_credit.jpg'),      agr: 16 / 9 },
+            swoopleague: { tex: load('ad_swoop_league.jpg'),     agr: 16 / 9 },
+            citizen1:    { tex: load('poster_citizen1.png'),     agr: 1 },
+            citizen2:    { tex: load('poster_citizen2.png'),     agr: 1 },
+            citizen3:    { tex: load('poster_citizen3.png'),     agr: 1 }
         };
         this.billboardArt = art;
 
-        // Placement recipe: which art, how tall (world units), and vertical anchor
-        // relative to the building height. Sizes vary for an ad-covered street.
+        // Mix of big facade ads, mid posters, and low street postings
         const recipe = [
-            { art: 'samurai',   size: 10, high: true,  flicker: false },
-            { art: 'bank',      size: 5.5, high: false, flicker: true  },
-            { art: 'biker',     size: 6,  high: false, flicker: false },
-            { art: 'pillscape', size: 6,  high: false, flicker: true  },
-            { art: 'citizen1',  size: 2.2, high: false, flicker: false, low: true },
-            { art: 'citizen2',  size: 2.2, high: false, flicker: false, low: true },
-            { art: 'citizen3',  size: 2.2, high: false, flicker: false, low: true }
+            { art: 'samurai',     size: 10,  high: true,  flicker: false },
+            { art: 'ramen',       size: 5.5, high: false, flicker: true  },
+            { art: 'wanted1',     size: 4.2, high: false, flicker: false },
+            { art: 'swoopleague', size: 5.8, high: false, flicker: false },
+            { art: 'bank',        size: 5.5, high: false, flicker: true  },
+            { art: 'featured1',   size: 4.0, high: false, flicker: false },
+            { art: 'neural',      size: 5.5, high: false, flicker: true  },
+            { art: 'wanted2',     size: 4.2, high: false, flicker: false },
+            { art: 'biker',       size: 6,   high: false, flicker: false },
+            { art: 'voidcredit',  size: 5.2, high: false, flicker: true  },
+            { art: 'featured2',   size: 4.0, high: false, flicker: false },
+            { art: 'pillscape',   size: 6,   high: false, flicker: true  },
+            { art: 'citizen1',    size: 2.2, high: false, flicker: false, low: true },
+            { art: 'citizen2',    size: 2.2, high: false, flicker: false, low: true },
+            { art: 'citizen3',    size: 2.2, high: false, flicker: false, low: true }
         ];
 
-        // Attach to a spread of buildings (every other one). Billboards are their
-        // OWN scene objects (not parented to the non-uniformly scaled box, which
-        // would shear a rotated child) and stream via the building's slotZ.
+        // Own scene objects (not parented to non-uniform boxes, which would shear).
         this.billboards = [];
         let ri = 0;
-        for (let bi = 0; bi < this.buildings.length && ri < recipe.length * 3; bi += 1) {
+        for (let bi = 0; bi < this.buildings.length && ri < recipe.length * 2; bi += 1) {
             if (bi % 2 !== 0) continue;
             const b = this.buildings[bi];
             const r = recipe[ri % recipe.length];
             ri++;
 
             const info = art[r.art];
+            if (!info) continue;
             const h = r.size;
             const w = r.size * info.agr;
 
@@ -417,18 +428,14 @@ class ThreeSceneRenderer {
             const side = b.userData.side;
             const bh = b.userData.h, bd = b.userData.depth;
 
-            // World-space vertical center of the art
             let worldY;
             if (r.high) worldY = Math.min(bh - h / 2 - 0.5, bh * 0.8);
             else if (r.low) worldY = 2.5 + Math.random() * 1.5;
             else worldY = bh * 0.45;
             worldY = Math.max(h / 2 + 0.3, worldY);
 
-            // X sits just off the road-facing face of the building.
             const faceX = b.position.x - side * (bd / 2 + 0.05);
-            // Orient plane normal toward the road (-side on X).
             plane.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
-            // small frontage jitter along Z (added to streamed z each frame)
             plane.userData = {
                 slotZ: b.userData.slotZ,
                 x: faceX,
@@ -626,7 +633,7 @@ class ThreeSceneRenderer {
     _loadTextures() {
         const loader = new THREE.TextureLoader();
         // Keep loading the existing KOTOR PNG textures as fallbacks so nothing
-        // breaks if a Neotokyo sprite key is missing.
+        // breaks if a NeoTokyo sprite key is missing.
         const spriteNames = [
             'ring_kotor', 'obstacle_junk1', 'obstacle_junk2',
             'obstacle_engine', 'obstacle_parked',
@@ -636,12 +643,12 @@ class ThreeSceneRenderer {
             this.textures[name] = loader.load(`assets/${name}.png`);
         }
 
-        // Neotokyo procedural sprites from a teammate's global (transparent canvases)
+        // NeoTokyo procedural sprites from a teammate's global (transparent canvases)
         const neoKeys = [
             'boost_pad', 'barricade', 'parked_vehicle', 'vendor_cart',
             'drone', 'security_gate', 'debris'
         ];
-        const neo = window.neotokyoSprites;
+        const neo = window.neoTokyoSprites;
         if (neo) {
             for (const key of neoKeys) {
                 const img = neo[key];
@@ -804,7 +811,7 @@ class ThreeSceneRenderer {
         loader.load('assets/swoop_bike.glb', (gltf) => {
             this.bikeModel = gltf.scene;
 
-            // Reskin materials toward a sleek Neotokyo machine: gunmetal/navy base
+            // Reskin materials toward a sleek NeoTokyo machine: gunmetal/navy base
             // with a subtle cyan emissive tint. Guard for materials lacking props.
             this.bikeModel.traverse((child) => {
                 if (!child.isMesh || !child.material) return;

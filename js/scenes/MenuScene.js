@@ -55,7 +55,7 @@ class MenuScene extends Phaser.Scene {
         titleBacking.fillStyle(0x000000, 0.4);
         titleBacking.fillRoundedRect(cx - 240, 48, 480, 130, 16);
 
-        const title = this.add.text(cx, 76, 'NEOTOKYO', {
+        const title = this.add.text(cx, 76, 'NeoTokyo', {
             fontFamily: 'Orbitron, monospace',
             fontSize: '48px',
             color: '#aef4ff',
@@ -89,9 +89,9 @@ class MenuScene extends Phaser.Scene {
 
         // Hoverbike preview
         let bikeImage;
-        if (window.neotokyoSprites && window.neotokyoSprites.player_bike) {
+        if (window.neoTokyoSprites && window.neoTokyoSprites.player_bike) {
             if (!this.textures.exists('player_bike')) {
-                this.textures.addCanvas('player_bike', window.neotokyoSprites.player_bike);
+                this.textures.addCanvas('player_bike', window.neoTokyoSprites.player_bike);
             }
             bikeImage = this.add.image(cx, 310, 'player_bike').setScale(0.95).setAlpha(0.92);
         } else {

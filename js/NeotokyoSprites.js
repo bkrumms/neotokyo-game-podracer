@@ -1,6 +1,6 @@
 // NeotokyoSprites.js
-// Procedurally-drawn cyberpunk-anime obstacle/prop sprites for Neotokyo Podracer.
-// Builds window.neotokyoSprites = { boost_pad, barricade, parked_vehicle, vendor_cart, drone, security_gate, debris, player_bike }
+// Procedurally-drawn cyberpunk-anime obstacle/prop sprites for NeoTokyo Swoop.
+// Builds window.neoTokyoSprites = { boost_pad, barricade, parked_vehicle, vendor_cart, drone, security_gate, debris, player_bike }
 // Each value is a transparent, off-DOM HTMLCanvasElement drawn with the 2D canvas API only.
 // Sprites are viewed straight-on (billboard), as encountered by the player on the road.
 
@@ -1032,7 +1032,7 @@
         return c;
     }
 
-    window.neotokyoSprites = {
+    window.neoTokyoSprites = {
         boost_pad: buildBoostPad(),
         barricade: buildBarricade(),
         parked_vehicle: buildParkedVehicle(),
