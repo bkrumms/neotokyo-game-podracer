@@ -8,11 +8,10 @@ Hit boost pads. Dodge street hazards. Three hull hits and you crash. Fastest tim
 
 ### Online (GitHub Pages)
 
-If Pages is enabled on this repo, open:
+**Play here (no install):**  
+https://bkrumms.github.io/neotokyo-game-podracer/
 
-`https://<your-username>.github.io/neotokyo-game-podracer/`
-
-No install required — just the link.
+Share that link — friends open it in a browser and race. No server setup.
 
 ### Locally
 
